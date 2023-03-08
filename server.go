@@ -3,18 +3,23 @@ package main
 import (
 	"bytes"
 	"cy17-starter-go-api/web"
+	"fmt"
 	"net/http"
 	"os"
+	"runtime"
 	"time"
 
 	"github.com/labstack/echo/v4"
+	"github.com/pbnjay/memory"
 )
 
 var startTime = time.Now();
 
+
 func main() {
 	e := echo.New()
 	web.RegisterHandlers(e)
+	RegisterRatesLimiter(e)
 	e.GET("/api/hello",getHello)
 	e.GET("/actuator/health", getHealth)
 	e.GET("/actuator/status", getStatus)
@@ -48,10 +53,24 @@ func getStatus(c echo.Context) error {
 		return c.String(http.StatusForbidden, "")
 	}
 	var buffer bytes.Buffer
+	buffer.WriteString("Go\n")
+	buffer.WriteString("~~~~~\n")
+	buffer.WriteString("Version: " + runtime.Version() + " " +runtime.GOOS + " " + runtime.GOARCH + "\n")
+	buffer.WriteString("Free memory: " + fmt.Sprint(memory.FreeMemory()) + "\n")
+	buffer.WriteString("Total memory: " + fmt.Sprint(memory.FreeMemory()) + "\n")
+	buffer.WriteString("Available processors: " + fmt.Sprint(runtime.NumCPU()) + "\n")
+	buffer.WriteString("\n")
 	buffer.WriteString("App\n")
 	buffer.WriteString("~~~~~\n")
 	buffer.WriteString("Server time: " + time.Now().Format(time.RFC3339Nano) + "\n")
 	buffer.WriteString("Uptime: " + time.Since(startTime).String() + "\n")
-
+	buffer.WriteString("\n")
+	buffer.WriteString("Rates\n")
+	buffer.WriteString("~~~~~\n")
+	buffer.WriteString("Total active: " + fmt.Sprint(len(Rates)) + "\n")
+	for key, value := range Rates {
+		buffer.WriteString(fmt.Sprintf("%-15s -> %d\n", key, value))
+    }
+	buffer.WriteString("\n")
 	return c.String(http.StatusOK, buffer.String());
 }
