@@ -1,0 +1,2 @@
+"use strict";(self.webpackChunkcy17_starter_react_app=self.webpackChunkcy17_starter_react_app||[]).push([[104],{5104:function(a,e,r){r.r(e);var s=r(9439),t=(r(2791),r(5100)),c=r(184);e.default=function(){var a=(0,t.ZP)("/api/hello"),e=(0,s.Z)(a,1)[0],r=e.data,n=e.loading,l=e.error;return(0,c.jsx)("div",{className:"page",children:(0,c.jsx)("h1",{children:n?"loading...":l?l.message:r})})}}}]);
+//# sourceMappingURL=104.cf06fc4b.chunk.js.map
