@@ -38,13 +38,13 @@ func RegisterRatesLimiter(e *echo.Echo) {
 
 func updateRate(id string) {
 	if v, ok := Rates[id]; ok {
-		Rates[id] = 10
-	} else {
 		rate := v-1
 		if rate <0 {
 			Rates[id] = 0
 		} else {
 			Rates[id] = v
 		}
+	} else {
+		Rates[id] = 10
 	}
 }

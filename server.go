@@ -7,9 +7,11 @@ import (
 	"net/http"
 	"os"
 	"runtime"
+	"strings"
 	"time"
 
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 	"github.com/pbnjay/memory"
 )
 
@@ -20,6 +22,8 @@ func main() {
 	e := echo.New()
 	web.RegisterHandlers(e)
 	RegisterRatesLimiter(e)
+	e.Use(middleware.GzipWithConfig(middleware.DefaultGzipConfig))
+	e.Use(CacheHandler)
 	e.GET("/api/hello",getHello)
 	e.GET("/actuator/health", getHealth)
 	e.GET("/actuator/status", getStatus)
@@ -30,6 +34,22 @@ func main() {
 	}
 
 	e.Logger.Fatal(e.Start(":" + httpPort))
+}
+
+func CacheHandler(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		path := c.Request().URL.Path
+		statics := [...]string{".html", ".map", ".js", ".css", ".json", ".jpg", ".png", ".gif", ".ttf", ".svg", ".ico"}
+		if path != "/" && path != "/index.html" {
+			for _,v := range statics {
+				if strings.HasSuffix(path, v) {
+					c.Response().Header().Add("last-modified",startTime.Format(time.RFC822))
+				}
+			}
+		}
+		
+		return next(c)
+	}
 }
 
 func getHello(c echo.Context) error {

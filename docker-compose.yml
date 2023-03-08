@@ -10,7 +10,6 @@ services:
       - '8080:8080'
     environment:
       SECURITY_API_KEY: foo
-      GOPATH: .go
     mem_limit: "2g"
     cpuset: "1"
     healthcheck:
