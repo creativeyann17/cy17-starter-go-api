@@ -3,6 +3,7 @@ package main
 import (
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/labstack/echo/v4"
@@ -10,6 +11,7 @@ import (
 )
 
 var Rates = make(map[string]int)
+var Lock = sync.RWMutex{}
 
 var config = middleware.RateLimiterConfig{
     Skipper: func(c echo.Context) bool {
@@ -35,14 +37,15 @@ func RegisterRatesLimiter(e *echo.Echo) {
 	e.Use(middleware.RateLimiterWithConfig(config))
 }
 
-
 func updateRate(id string) {
+	Lock.Lock()
+	defer Lock.Unlock()
 	if v, ok := Rates[id]; ok {
 		rate := v-1
 		if rate <0 {
 			Rates[id] = 0
 		} else {
-			Rates[id] = v
+			Rates[id] = rate
 		}
 	} else {
 		Rates[id] = 10

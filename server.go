@@ -7,16 +7,19 @@ import (
 	"net/http"
 	"os"
 	"runtime"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	"github.com/labstack/gommon/log"
 	"github.com/pbnjay/memory"
 )
 
 var startTime = time.Now();
-
+var statics = [...]string{".html", ".map", ".js", ".css", ".json", ".jpg", ".png", ".gif", ".ttf", ".svg", ".ico"}
+var debug, _ = strconv.ParseBool(os.Getenv("DEBUG"))
 
 func main() {
 	e := echo.New()
@@ -33,13 +36,17 @@ func main() {
 		httpPort = "8080"
 	}
 
+	if debug {
+		e.Logger.SetLevel(log.DEBUG)
+	} else {
+		e.Logger.SetLevel(log.ERROR)
+	}
 	e.Logger.Fatal(e.Start(":" + httpPort))
 }
 
 func CacheHandler(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		path := c.Request().URL.Path
-		statics := [...]string{".html", ".map", ".js", ".css", ".json", ".jpg", ".png", ".gif", ".ttf", ".svg", ".ico"}
 		if path != "/" && path != "/index.html" {
 			for _,v := range statics {
 				if strings.HasSuffix(path, v) {
@@ -84,9 +91,12 @@ func getStatus(c echo.Context) error {
 	buffer.WriteString("~~~~~\n")
 	buffer.WriteString("Server time: " + time.Now().Format(time.RFC3339Nano) + "\n")
 	buffer.WriteString("Uptime: " + time.Since(startTime).String() + "\n")
+	buffer.WriteString("Max simultaneous request: " + fmt.Sprint(runtime.GOMAXPROCS(-1)) + "\n")
 	buffer.WriteString("\n")
 	buffer.WriteString("Rates\n")
 	buffer.WriteString("~~~~~\n")
+	Lock.RLock()
+	defer Lock.RUnlock()
 	buffer.WriteString("Total active: " + fmt.Sprint(len(Rates)) + "\n")
 	for key, value := range Rates {
 		buffer.WriteString(fmt.Sprintf("%-15s -> %d\n", key, value))
